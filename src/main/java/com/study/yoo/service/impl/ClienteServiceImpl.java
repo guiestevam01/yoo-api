@@ -1,9 +1,8 @@
 package com.study.yoo.service.impl;
 
 
-import ch.qos.logback.core.net.server.Client;
-import com.study.yoo.dto.ClienteDto;
-import com.study.yoo.exception.BadRequestException;
+import com.study.yoo.dto.ClienteRequestDto;
+import com.study.yoo.dto.ClienteResponseDto;
 import com.study.yoo.exception.NotFoundException;
 import com.study.yoo.mapper.ClienteMapper;
 import com.study.yoo.model.Cliente;
@@ -12,47 +11,53 @@ import com.study.yoo.service.ClienteService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
 
 @Service
-public class ClienteServiceImpl implements ClienteService{
+public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository clienteRepository;
+
     public ClienteServiceImpl(ClienteRepository clienteRepository){
         this.clienteRepository = clienteRepository;
     }
+
     @Override
-    public List<Cliente> findAll() {
-        return clienteRepository.findAll();
+    public List<ClienteResponseDto> findAll() {
+        return clienteRepository.findAll()
+                .stream()
+                .map(ClienteMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public Cliente findById(Long id) {
-        return getCliente(id);
+    public ClienteResponseDto findById(Long id){
+        Cliente cliente = getCliente(id);
+        return ClienteMapper.toResponse(cliente);
     }
 
-    /* sem dao
     @Override
-    public Cliente create(Cliente cliente) {
-        return clienteRepository.save(cliente);
+    public ClienteResponseDto create(ClienteRequestDto dto) {
+
+        Cliente cliente = ClienteMapper.fromRequestToEntity(dto);
+        Cliente saved = clienteRepository.save(cliente);
+
+        return ClienteMapper.toResponse(saved);
     }
-    */
 
     @Override
-    public Cliente create(ClienteDto dto){
-        if(Objects.nonNull(dto.getId())){
-           throw new BadRequestException("Cliente deve ser nulo");
-        }
-        return clienteRepository.save(ClienteMapper.fromDtoToEntity(dto));
-    }
-    @Override
-    public Cliente update(Long id, ClienteDto dto) {
-        getCliente(id);
-        dto.setId(id);
-        return clienteRepository.save(ClienteMapper.fromDtoToEntity(dto));
+    public ClienteResponseDto update(Long id, ClienteRequestDto dto) {
 
+        Cliente cliente = getCliente(id);
+
+        cliente.setName(dto.getName());
+        cliente.setEmail(dto.getEmail());
+
+        Cliente updated = clienteRepository.save(cliente);
+
+        return ClienteMapper.toResponse(updated);
     }
+
     @Override
     public void delete(Long id) {
         getCliente(id);
@@ -60,10 +65,8 @@ public class ClienteServiceImpl implements ClienteService{
     }
 
     private Cliente getCliente(Long id) {
-        Optional<Cliente> optionalCliente = clienteRepository.findById(id);
-        if(optionalCliente.isEmpty()){
-            throw new NotFoundException("Cliente nao encontrado.");
-        }
-        return optionalCliente.get();
+        return clienteRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Cliente nao encontrado."));
     }
 }
+

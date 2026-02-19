@@ -1,11 +1,8 @@
 package com.study.yoo.controller;
 import com.study.yoo.configuration.ApiErrorResponses;
-import com.study.yoo.dto.ClienteDto;
-import com.study.yoo.model.Cliente;
+import com.study.yoo.dto.ClienteRequestDto;
+import com.study.yoo.dto.ClienteResponseDto;
 import com.study.yoo.service.ClienteService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,33 +13,45 @@ import java.util.List;
 @RestController
 @RequestMapping("clientes")
 public class ClienteController {
+
     private final ClienteService clienteService;
 
     public ClienteController(ClienteService clienteService){
         this.clienteService = clienteService;
     }
+
     @GetMapping
-    public ResponseEntity<List<Cliente>> findAll(){
-        return ResponseEntity.status(HttpStatus.OK).body(clienteService.findAll());
+    public ResponseEntity<List<ClienteResponseDto>> findAll(){
+        return ResponseEntity.ok(clienteService.findAll());
     }
 
     @GetMapping("/{id}")
     @ApiErrorResponses
-    public ResponseEntity<Cliente> findById(@PathVariable("id") Long id){
-        return ResponseEntity.status(HttpStatus.OK).body(clienteService.findById(id));
+    public ResponseEntity<ClienteResponseDto> findById(@PathVariable Long id){
+        return ResponseEntity.ok(clienteService.findById(id));
     }
+
     @PostMapping
-    public ResponseEntity<Cliente> create(@Valid @RequestBody ClienteDto dto){
-        return ResponseEntity.status(HttpStatus.CREATED).body(clienteService.create(dto));
+    public ResponseEntity<ClienteResponseDto> create(
+            @Valid @RequestBody ClienteRequestDto dto){
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(clienteService.create(dto));
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<Cliente> update(@PathVariable("id") Long id, @RequestBody ClienteDto dto){
-        return ResponseEntity.status(HttpStatus.OK).body(clienteService.update(id,dto));
+    public ResponseEntity<ClienteResponseDto> update(
+            @PathVariable Long id,
+            @Valid @RequestBody ClienteRequestDto dto){
+
+        return ResponseEntity.ok(clienteService.update(id,dto));
     }
+
     @DeleteMapping("/{id}")
     @ApiErrorResponses
-    public ResponseEntity<Void> delete(@PathVariable ("id") Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id){
         clienteService.delete(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+        return ResponseEntity.noContent().build();
     }
 }
